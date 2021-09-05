@@ -4,7 +4,7 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="Redis缓存穿透/击穿/雪崩, WSJ">
+    <meta name="keywords" content="HashMap, WSJ">
     <meta name="description" content="">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -16,7 +16,7 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>Redis缓存穿透/击穿/雪崩 | WSJ</title>
+    <title>HashMap | WSJ</title>
     <link rel="icon" type="image/png" href="/favicon.png">
 
     <link rel="stylesheet" type="text/css" href="/libs/awesome/css/all.css">
@@ -225,12 +225,12 @@
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/11.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/2.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">Redis缓存穿透/击穿/雪崩</h1>
+                    <h1 class="description center-align post-title">HashMap</h1>
                 </div>
             </div>
         </div>
@@ -346,8 +346,8 @@
                     
                     <div class="article-tag">
                         
-                            <a href="/tags/Redis/">
-                                <span class="chip bg-color">Redis</span>
+                            <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">
+                                <span class="chip bg-color">数据结构</span>
                             </a>
                         
                     </div>
@@ -362,7 +362,7 @@
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2021-08-13
+                    2021-08-25
                 </div>
                 
 
@@ -383,27 +383,98 @@
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <h2 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h2><ul>
-<li>缓存穿透：查询的数据并不存在，从缓存中取不到，则去数据库中查找，如果数量过多，可能会压垮数据库。</li>
-<li>缓存击穿：查询的数据在缓存中存在，但是数据过期，此时有大量请求的话，就会直接去数据库中查找并加载回缓存，导致数据库压力过大。</li>
-<li>缓存雪崩：当缓存服务器重启或者有大量数据集中过期，那么也会有大量请求去数据库中查找数据，给数据库造成很大压力。<h2 id="缓存穿透两种解决方法"><a href="#缓存穿透两种解决方法" class="headerlink" title="缓存穿透两种解决方法"></a>缓存穿透两种解决方法</h2></li>
-<li>采用布隆过滤器，将所有可能存在的数据哈希到一个足够大的bitmap中，一个一定不存在的数据会被 这个bitmap拦截掉，从而避免了对底层存储系统的查询压力。</li>
-<li>如果查询数据返回为空(不管是不存在，还是系统故障)，仍然把这个空值进行缓存，但过期时间很短。<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//伪代码</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> object <span class="title">GetProductListNew</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> cacheTime = <span class="number">30</span>;</span><br><span class="line">    String cacheKey = <span class="string">&quot;product_list&quot;</span>;</span><br><span class="line"></span><br><span class="line">    String cacheValue = CacheHelper.Get(cacheKey);</span><br><span class="line">    <span class="keyword">if</span> (cacheValue != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> cacheValue;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    cacheValue = CacheHelper.Get(cacheKey);</span><br><span class="line">    <span class="keyword">if</span> (cacheValue != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> cacheValue;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">//数据库查询不到，为空</span></span><br><span class="line">        cacheValue = GetProductListFromDB();</span><br><span class="line">        <span class="keyword">if</span> (cacheValue == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="comment">//如果发现为空，设置个默认值，也缓存起来</span></span><br><span class="line">            cacheValue = string.Empty;</span><br><span class="line">        &#125;</span><br><span class="line">        CacheHelper.Add(cacheKey, cacheValue, cacheTime);</span><br><span class="line">        <span class="keyword">return</span> cacheValue;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="缓存击穿解决方法"><a href="#缓存击穿解决方法" class="headerlink" title="缓存击穿解决方法"></a>缓存击穿解决方法</h2>使用互斥锁(mutex key)<br>在缓存失效的时候，不直接去数据库中查找，而是使用缓存中带有成功操作的返回值的操作，当操作成功时，才去数据库中查找，比如setnx,当第一个请求来时setnx操作成功，去数据库中查找，并设置缓存，其他请求执行setnx操作不成功，无法去数据库查找，等待第一个请求之后，再去缓存中查找。<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> String <span class="title">get</span><span class="params">(key)</span> </span>&#123;</span><br><span class="line">    String value = redis.get(key);</span><br><span class="line">    <span class="keyword">if</span> (value == <span class="keyword">null</span>) &#123; <span class="comment">//代表缓存值过期</span></span><br><span class="line">          <span class="comment">//设置3min的超时，防止del操作失败的时候，下次缓存过期一直不能load db</span></span><br><span class="line">        <span class="keyword">if</span> (redis.setnx(key_mutex, <span class="number">1</span>, <span class="number">3</span> * <span class="number">60</span>) == <span class="number">1</span>) &#123;  <span class="comment">//代表设置成功</span></span><br><span class="line">            value = db.get(key);</span><br><span class="line">            redis.set(key, value, expire_secs);</span><br><span class="line">            redis.del(key_mutex);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;  <span class="comment">//这个时候代表同时候的其他线程已经load db并回设到缓存了，这时候重试获取缓存值即可</span></span><br><span class="line">            sleep(<span class="number">50</span>);</span><br><span class="line">            get(key);  <span class="comment">//重试</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">              <span class="keyword">return</span> value;      </span><br><span class="line">    &#125;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
-<h2 id="缓存雪崩解决方法"><a href="#缓存雪崩解决方法" class="headerlink" title="缓存雪崩解决方法"></a>缓存雪崩解决方法</h2></li>
-<li>通过加锁或者队列的方法来防止大量的线程对数据库一次性进行读写操作，从而避免失效时大量的并发请求落到底层存储系统上。</li>
-<li>可以再原本的失效时间上加上一个随机值，这样缓存的过期时间的重复率就会降低，很难引发集体失效的事件。</li>
-</ul>
-<p>加锁排队方式伪代码</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//伪代码</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> object <span class="title">GetProductListNew</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> cacheTime = <span class="number">30</span>;</span><br><span class="line">    String cacheKey = <span class="string">&quot;product_list&quot;</span>;</span><br><span class="line">    String lockKey = cacheKey;</span><br><span class="line"></span><br><span class="line">    String cacheValue = CacheHelper.get(cacheKey);</span><br><span class="line">    <span class="keyword">if</span> (cacheValue != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> cacheValue;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">synchronized</span>(lockKey) &#123;</span><br><span class="line">            cacheValue = CacheHelper.get(cacheKey);</span><br><span class="line">            <span class="keyword">if</span> (cacheValue != <span class="keyword">null</span>) &#123;</span><br><span class="line">                <span class="keyword">return</span> cacheValue;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">              <span class="comment">//这里一般是sql查询数据</span></span><br><span class="line">                cacheValue = GetProductListFromDB(); </span><br><span class="line">                CacheHelper.Add(cacheKey, cacheValue, cacheTime);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> cacheValue;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>随机值伪代码</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//伪代码</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> object <span class="title">GetProductListNew</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> cacheTime = <span class="number">30</span>;</span><br><span class="line">    String cacheKey = <span class="string">&quot;product_list&quot;</span>;</span><br><span class="line">    <span class="comment">//缓存标记</span></span><br><span class="line">    String cacheSign = cacheKey + <span class="string">&quot;_sign&quot;</span>;</span><br><span class="line"></span><br><span class="line">    String sign = CacheHelper.Get(cacheSign);</span><br><span class="line">    <span class="comment">//获取缓存值</span></span><br><span class="line">    String cacheValue = CacheHelper.Get(cacheKey);</span><br><span class="line">    <span class="keyword">if</span> (sign != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> cacheValue; <span class="comment">//未过期，直接返回</span></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        CacheHelper.Add(cacheSign, <span class="string">&quot;1&quot;</span>, cacheTime);</span><br><span class="line">        ThreadPool.QueueUserWorkItem((arg) -&gt; &#123;</span><br><span class="line">      <span class="comment">//这里一般是 sql查询数据</span></span><br><span class="line">            cacheValue = GetProductListFromDB(); </span><br><span class="line">          <span class="comment">//日期设缓存时间的2倍，用于脏读</span></span><br><span class="line">          CacheHelper.Add(cacheKey, cacheValue, cacheTime * <span class="number">2</span>);                 </span><br><span class="line">        &#125;);</span><br><span class="line">        <span class="keyword">return</span> cacheValue;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>解释说明：</p>
+                <h1 id="B-树，B-树"><a href="#B-树，B-树" class="headerlink" title="B-树，B+树"></a>B-树，B+树</h1><p>首先来介绍B-树与B+树。</p>
+<h2 id="B-树"><a href="#B-树" class="headerlink" title="B-树"></a>B-树</h2><p>1970年，R.Bayer和E.mccreight提出了一种适用于外查找的树，它是一种平衡的多叉树，称为B树（或B-树、B_树）。<br><strong>m阶的B树必须满足以下条件</strong></p>
 <ul>
-<li>缓存标记：记录缓存数据是否过期，如果过期会触发通知另外的线程在后台去更新实际key的缓存；</li>
-<li>缓存数据：它的过期时间比缓存标记的时间延长1倍，例：标记缓存时间30分钟，数据缓存设置为60分钟。这样，当缓存标记key过期后，实际缓存还能把旧数据返回给调用端，直到另外的线程在后台更新完成后，才会返回新缓存。</li>
+<li>每个节点最多只有m个子节点。</li>
+<li>每个非叶子节点（除了根）具有至少⌈ m/2⌉子节点。</li>
+<li>如果根不是叶节点，则根至少有两个子节点。</li>
+<li>具有k个子节点的非叶节点包含k -1个键。</li>
+<li>所有叶子都出现在同一水平，没有任何信息（高度一致）。<blockquote>
+<p>B树的阶</p>
+</blockquote>
+</li>
 </ul>
-<p>参考相关链接：<a target="_blank" rel="noopener" href="https://www.cnblogs.com/midoujava/p/11277096.html">https://www.cnblogs.com/midoujava/p/11277096.html</a></p>
+<p>B树中一个节点的子节点数目的最大值，即为B树的阶。<br><img src="https://note.youdao.com/yws/api/personal/file/WEBf22f1cb5061a690642e4ed9132946430?method=download&shareKey=dad5244c7980e03f8dff86749c4d99af"><br>图中，结点[13,16,19]拥有的子节点数最多，有4个，所以是一棵4阶B树。</p>
+<blockquote>
+<p>根节点</p>
+</blockquote>
+<p>节点[10]即为根节点，根结点的儿子数为[2, m]，包含的元素数量为[1,m-1]</p>
+<blockquote>
+<p>内部节点</p>
+</blockquote>
+<p>除了根节点与叶子节点，其他节点均为内部节点拥有父节点和子节点，根节点的儿子数为[m/2, m],元素数量为[m/2-1,m-1],m/2向上取整</p>
+<blockquote>
+<p>叶子节点</p>
+</blockquote>
+<p>节点[11,12],[14,15]等最后一层的都是叶子节点，元素数量为[m/2-1,m-1],m/2向上取整<br><strong>插入</strong><br>对于m阶的B数，插入一个元素时，首先在B树中是否存在，如果不存在，会在叶子节点处结束，然后再叶子节点处插入。</p>
+<ul>
+<li>如果该节点元素的数量小于m-1,直接插入。</li>
+<li>如果该节点元素的数量等于m-1,则以中间元素分裂，上移至父节点。</li>
+<li>重复第二步的动作，直到所有节点都符合B-树规则，最坏的情况一直分裂，生成新的根节点，高度加1。  </li>
+</ul>
+<p><strong>删除</strong>(参考<a target="_blank" rel="noopener" href="http://xianzilei.cn/blog/31">http://xianzilei.cn/blog/31</a>)  </p>
+<ul>
+<li>1）如果当前需要删除的key位于非叶子节点上，则用后继key（这里的后继key均指后继记录的意思）覆盖要删除的key，然后在后继key所在的子支中删除该后继key。此时后继key一定位于叶子节点上，这个过程和二叉搜索树删除节点的方式类似。删除这个记录后执行第2步</li>
+<li>2）该节点key个数大于等于(m/2)-1，结束删除操作，否则执行第3步。</li>
+<li>3）如果兄弟节点key个数大于(m/2)-1，则父节点中的key下移到该节点，兄弟节点中的一个key上移，删除操作结束。</li>
+<li>4）否则，将父节点中的key下移与当前节点及它的兄弟节点中的key合并，形成一个新的节点。原父节点中的key的两个孩子指针就变成了一个孩子指针，指向这个新节点。然后当前节点的指针指向父节点，重复上第2步。（有些节点它可能即有左兄弟，又有右兄弟，那么我们任意选择一个兄弟节点进行操作即可）</li>
+</ul>
+<p>一棵含有N个总关键字数的m阶的B树的最大高度是多少？</p>
+<p>log（m/2）(N+1)/2 + 1  ，log以（m/2）为低，(N+1)/2的对数再加1</p>
+<h2 id="B-树-1"><a href="#B-树-1" class="headerlink" title="B+树"></a>B+树</h2><p>B+树其实是B树的一种变体。<br>B+树的特征：</p>
+<ul>
+<li>有m个子树的中间节点包含有m个元素（B树中是k-1个元素），每个元素不保存数据，只用来索引；</li>
+<li>所有的叶子结点中包含了全部关键字的信息，及指向含有这些关键字记录的指针，且叶子结点本身依关键字的大小自小而大的顺序链接。 (而B 树的叶子节点并没有包括全部需要查找的信息)；</li>
+<li>所有的非终端结点可以看成是索引部分，结点中仅含有其子树根结点中最大（或最小）关键字。 (而B 树的非终节点也包含需要查找的有效信息)；</li>
+</ul>
+<p>为什么说B+树比B树更适合数据库索引？<br>1）B+树的磁盘读写代价更低</p>
+<p>　　B+树的内部结点并没有指向关键字具体信息的指针。因此其内部结点相对B 树更小。如果把所有同一内部结点的关键字存放在同一盘块中，那么盘块所能容纳的关键字数量也越多。一次性读入内存中的需要查找的关键字也就越多。相对来说IO读写次数也就降低了；</p>
+<p>2）B+树查询效率更加稳定</p>
+<p>　　由于非终结点并不是最终指向文件内容的结点，而只是叶子结点中关键字的索引。所以任何关键字的查找必须走一条从根结点到叶子结点的路。所有关键字查询的路径长度相同，导致每一个数据的查询效率相当；</p>
+<p>3）B+树便于范围查询（最重要的原因，范围查找是数据库的常态）</p>
+<p>　　B树在提高了IO性能的同时并没有解决元素遍历的我效率低下的问题，正是为了解决这个问题，B+树应用而生。B+树只需要去遍历叶子节点就可以实现整棵树的遍历。而且在数据库中基于范围的查询是非常频繁的，而B树不支持这样的操作或者说效率太低；<br><strong>B+树：</strong><br><img src="https://note.youdao.com/yws/api/personal/file/WEB5451482d05f869e84f6cb92ebe55ef71?method=download&shareKey=83392c9a0e73bfb22ce228bc7941b493"></p>
+<h1 id="红黑树"><a href="#红黑树" class="headerlink" title="红黑树"></a>红黑树</h1><h2 id="红黑树的定义和性质"><a href="#红黑树的定义和性质" class="headerlink" title="红黑树的定义和性质"></a>红黑树的定义和性质</h2><p>红黑树是一种含有红黑结点并能自平衡的二叉查找树。它必须满足下面性质：</p>
+<ul>
+<li>性质1：每个节点要么是黑色，要么是红色。</li>
+<li>性质2：根节点是黑色。</li>
+<li>性质3：每个叶子节点（NIL）是黑色。（在Java中，叶子结点是为null的结点。）</li>
+<li>性质4：每个红色结点的两个子结点一定都是黑色。</li>
+<li>性质5：任意一结点到每个叶子结点的路径都包含数量相同的黑结点。<br><img src="https://note.youdao.com/yws/api/personal/file/WEBeaaa1ac52bc5fad3104072cc6043daba?method=download&shareKey=91e95d61c9423af61807d0569af6b165" alt="红黑树"></li>
+</ul>
+<p><strong>注意图中的黑色方格代表值为空的叶子节点</strong><br>红黑树并不是一棵完美平衡二叉树，但是左右子树的黑色节点的层数是相同的，即任意一个节点到每个叶子节点所经过的黑色节点的数量是相同的，这种平衡被称为黑色完美平衡。</p>
+<p>红黑树有三种操作：左旋，右旋，变色。正是通过这三种操作实现了自平衡。</p>
+<ul>
+<li>左旋：以某个结点作为支点(旋转结点)，其右子结点变为旋转结点的父结点，右子结点的左子结点变为旋转结点的右子结点，左子结点保持不变。</li>
+<li>右旋：以某个结点作为支点(旋转结点)，其左子结点变为旋转结点的父结点，左子结点的右子结点变为旋转结点的左子结点，右子结点保持不变。</li>
+<li>变色：结点的颜色由红变黑或由黑变红。</li>
+</ul>
+<p><img src="https://note.youdao.com/yws/api/personal/file/WEB41ccdf109878f374fb9ad331fd9b2487?method=download&shareKey=c94ce0910416847be42ee97ed4f40e04" alt="左旋"><br><img src="https://note.youdao.com/yws/api/personal/file/WEB9078573835d74117eb4bd093b75d8b3e?method=download&shareKey=5a1d1f994a9a84c9b0ff8faad7872767" alt="右旋"></p>
+<h3 id="红黑树的查找"><a href="#红黑树的查找" class="headerlink" title="红黑树的查找"></a>红黑树的查找</h3><p>因为红黑树是一颗二叉平衡树，并且查找不会破坏树的平衡，所以查找跟二叉平衡树的查找无异：</p>
+<ul>
+<li>1.从根结点开始查找，把根结点设置为当前结点；</li>
+<li>2.若当前结点为空，返回null；</li>
+<li>3.若当前结点不为空，用当前结点的key跟查找key作比较；</li>
+<li>4.若当前结点key等于查找key，那么该key就是查找目标，返回当前结点；</li>
+<li>5.若当前结点key大于查找key，把当前结点的左子结点设置为当前结点，重复步骤2；</li>
+<li>6.若当前结点key小于查找key，把当前结点的右子结点设置为当前结点，重复步骤2；</li>
+</ul>
+<h3 id="红黑树的插入"><a href="#红黑树的插入" class="headerlink" title="红黑树的插入"></a>红黑树的插入</h3><p>插入的节点再插入时会被染成红色，因为这样不会破坏性质五</p>
+<p><strong>情况一</strong>：红黑树为空树，直接插入到根节点，结束</p>
+<p><strong>情况二</strong>：插入的key已经存在，把要插入的节点设置为将要代替的节点的颜色，将节点更新</p>
+<p><strong>情况三</strong>：插入节点的父节点为黑色，这种情况不会影响平衡，直接插入。</p>
+<p><strong>情况四</strong>：插入节点的父节点为红色，且叔叔节点存在为红色，那么将祖父节点变为红色，父节点，叔叔节点变为黑色，这是因为祖父节点变为红色，可能依然破坏了平衡，所以可能需要接着平衡，知道平衡为止。</p>
+<p><strong>情况五</strong>：插入节点为父节点的左子节点且父节点为红色，且叔叔节点不存在或为黑色，将祖父节点染为红色，父节点染为黑色，绕祖父节点右旋。<br><img src="https://note.youdao.com/yws/api/personal/file/WEB191aaf2581a7120fd64dc98f63ae0a7a?method=download&shareKey=db17dbe15fbdd2f400d6525a1424f3ec"></p>
+<p><strong>情况六</strong>：插入节点为父节点的右子节点且父节点为红色，且叔叔节点不存在或为黑色，先绕父节点进行左旋，然后变为情况五。。<br><img src="https://note.youdao.com/yws/api/personal/file/WEBb395efd39768666d42f5920b57e33967?method=download&shareKey=29543c51192574f4a92bc9a26ec1479b"></p>
+<p><strong>情况七</strong>：为情况五的对称情况，与其进行对应的反操作即可<br><img src="https://note.youdao.com/yws/api/personal/file/WEB3c87725fb5fd228924b4a1628338928e?method=download&shareKey=60c61b8d52b31f0b81ffda6fd134fb2c"><br><strong>情况八</strong>：为情况六的对此情况，与其进行对应的反操作即可<br><img src="https://note.youdao.com/yws/api/personal/file/WEBcedb8a70eaee0340a81ec56577e29e7e?method=download&shareKey=71f4abb15c3e2fee24088aa7aa6484b7"></p>
+<h3 id="红黑树删除"><a href="#红黑树删除" class="headerlink" title="红黑树删除"></a>红黑树删除</h3><p>红黑树的删除操作也包括两部分工作：一查找目标结点；二删除后自平衡。当不存在目标结点时，忽略本次操作；当存在目标结点时，删除后就得做自平衡处理了。删除了结点后我们还需要找结点来替代删除结点的位置，不然子树跟父辈结点断开了，除非删除结点刚好没子结点，那么就不需要替代。</p>
+<p>二叉树删除结点找替代结点有3种情情景：</p>
+<ul>
+<li>情景1：若删除结点无子结点，直接删除</li>
+<li>情景2：若删除结点只有一个子结点，用子结点替换删除结点</li>
+<li>情景3：若删除结点有两个子结点，用后继结点（大于删除结点的最小结点）替换删除结点(也可以找小于删除节点的最大节点)</li>
+</ul>
+<p><strong>如果直接删除节点，那么将会破坏树，修复十分麻烦，但是如果将需要删除的节点用需要替换的节点替换，然后删除替换的节点，则非常容易。</strong></p>
 
                 
             </div>
@@ -430,7 +501,7 @@
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="http://wsj6109118105.github.io/2021/08/13/Redis%E7%BC%93%E5%AD%98%E7%A9%BF%E9%80%8F-%E5%87%BB%E7%A9%BF-%E9%9B%AA%E5%B4%A9/">http://wsj6109118105.github.io/2021/08/13/Redis%E7%BC%93%E5%AD%98%E7%A9%BF%E9%80%8F-%E5%87%BB%E7%A9%BF-%E9%9B%AA%E5%B4%A9/</a>
+                    <a href="http://wsj6109118105.github.io/2021/08/25/HashMap/">http://wsj6109118105.github.io/2021/08/25/HashMap/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -468,8 +539,8 @@
                     
                         <div class="article-tag">
                             
-                                <a href="/tags/Redis/">
-                                    <span class="chip bg-color">Redis</span>
+                                <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">
+                                    <span class="chip bg-color">数据结构</span>
                                 </a>
                             
                         </div>
@@ -515,9 +586,10 @@
 <article id="prenext-posts" class="prev-next articles">
     <div class="row article-row">
         
-        <div class="article col s12 m6" data-aos="fade-up">
+        <div class="article col s12 m6" data-aos="fade-up" data-aos="fade-up">
             <div class="article-badge left-badge text-color">
-                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
+                <i class="far fa-dot-circle"></i>&nbsp;本篇
+            </div>
             <div class="card">
                 <a href="/2021/08/25/HashMap/">
                     <div class="card-image">
@@ -535,9 +607,9 @@
                         
                     </div>
                     <div class="publish-info">
-                        <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2021-08-25
-                        </span>
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2021-08-25
+                            </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-user fa-fw"></i>
@@ -546,6 +618,7 @@
                         </span>
                     </div>
                 </div>
+
                 
                 <div class="card-action article-tags">
                     
@@ -564,13 +637,13 @@
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2021/08/13/Redis%E5%9F%BA%E7%A1%80/">
+                <a href="/2021/08/13/Redis%E7%BC%93%E5%AD%98%E7%A9%BF%E9%80%8F-%E5%87%BB%E7%A9%BF-%E9%9B%AA%E5%B4%A9/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="Redis基础">
+                        <img src="/medias/featureimages/11.jpg" class="responsive-img" alt="Redis缓存穿透/击穿/雪崩">
                         
-                        <span class="card-title">Redis基础</span>
+                        <span class="card-title">Redis缓存穿透/击穿/雪崩</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
